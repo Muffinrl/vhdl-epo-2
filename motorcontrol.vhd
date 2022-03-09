@@ -36,13 +36,13 @@ begin
 		end if;
 	end process;
 
-	
+	-- TODO: Verify
 	process (state)
 	begin
 		case state is
 			when motor_off 	=>
 				pwm		<= '0';
-				
+				-- Go to state "motor_off" if reset is high.
 				if( reset = '0') then
 					new_state <= pulse_high;
 				else
@@ -51,15 +51,15 @@ begin
 			
 			when pulse_high	=>
 				pwm 		<= '1';
-
+				-- 1 ms pulse if direction is low.
 				if(direction = '0') then
-				-- TODO: Verify
 					if (count > x"0C34F") then
 						new_state <= pulse_low;
 					else
 						new_state <= pulse_high;
 					end if;
 				else
+				-- 2 ms pulse if direction is high.
 					if (count > x"1869E") then
 						new_state <= pulse_low;
 					else
@@ -69,12 +69,20 @@ begin
 
 			when pulse_low 	=>
 				pwm		<= '0';
-
-				--if(direction = '0') then
-				-- TODO: finish code
-				--else
-				
-				--end if;
+				-- goes to state "pulse_high" if the count is reset
+				if (direction = '0') then
+					if(count < x"0C34F") then
+						new_state <= pulse_high;
+					else
+						new_state <= pulse_low;
+					end if;
+				else
+					if(count < x"1869E") then
+						new_state <= pulse_high;
+					else
+						new_state <= pulse_low;
+					end if;
+				end if;
 		end case;			
 	end process;
 end architecture behavioural;
