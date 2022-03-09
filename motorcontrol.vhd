@@ -2,7 +2,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-entity motor_controller is
+entity motorcontrol is
 	port (	clk		: in 	std_logic;
 		reset		: in 	std_logic;
 		direction	: in	std_logic;
@@ -11,16 +11,15 @@ entity motor_controller is
 		pwm		: out	std_logic
 	);
 
-end entity motor_controller;
+end entity motorcontrol;
 
-architecture behavioural of motor_controller is
+architecture behavioural of motorcontrol is
 
-	type	motor_controller_state is (	motor_off,
+	type	motorcontrol_state is (		motor_off,
 						pulse_high,
 						pulse_low);
 
-	signal	state, new_state:	motor_controller_state;
-	signal 	count		: 	unsigned(19 downto 0);
+	signal	state, new_state:	motorcontrol_state;
 
 
 begin
@@ -37,30 +36,26 @@ begin
 	end process;
 
 	-- TODO: Verify
-	process (state)
+	process (state, direction, count_in)
 	begin
 		case state is
 			when motor_off 	=>
 				pwm		<= '0';
-				-- Go to state "motor_off" if reset is high.
-				if( reset = '0') then
-					new_state <= pulse_high;
-				else
-					new_state <= motor_off;
-				end if;
+				new_state <= pulse_high;
 			
 			when pulse_high	=>
 				pwm 		<= '1';
-				-- 1 ms pulse if direction is low.
-				if(direction = '0') then
-					if (count > x"0C34F") then
+
+				if(direction = '1') then
+					-- 2 ms pulse if direction is high.
+					if ( unsigned(count_in) > to_unsigned(100000, 20)) then
 						new_state <= pulse_low;
 					else
 						new_state <= pulse_high;
 					end if;
 				else
-				-- 2 ms pulse if direction is high.
-					if (count > x"1869E") then
+					-- 1 ms pulse if direction is low.
+					if ( unsigned(count_in) > to_unsigned(50000, 20)) then
 						new_state <= pulse_low;
 					else
 						new_state <= pulse_high;
@@ -69,22 +64,9 @@ begin
 
 			when pulse_low 	=>
 				pwm		<= '0';
-				-- goes to state "pulse_high" if the count is reset
-				if (direction = '0') then
-					if(count < x"0C34F") then
-						new_state <= pulse_high;
-					else
-						new_state <= pulse_low;
-					end if;
-				else
-					if(count < x"1869E") then
-						new_state <= pulse_high;
-					else
-						new_state <= pulse_low;
-					end if;
-				end if;
 		end case;			
 	end process;
+
 end architecture behavioural;
 
 			

@@ -2,14 +2,14 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-entity counter is
+entity timebase is
 
 	port ( 	clk		: in std_logic;
 		reset		: in std_logic;
 		count_out	: out std_logic_vector(19 downto 0) );
-end entity counter;
+end entity timebase;
 
-architecture behavioural of counter is
+architecture behavioural of timebase is
 	
 	signal count, new_count		: unsigned (19 downto 0);
 
