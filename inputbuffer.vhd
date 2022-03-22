@@ -4,7 +4,8 @@ use IEEE.numeric_std.all;
 
 entity inputbuffer is
 
-	port (	sensor_l_in	: in 	std_logic;
+	port (	clk		: in	std_logic;
+		sensor_l_in	: in 	std_logic;
 		sensor_m_in	: in 	std_logic;
 		sensor_r_in	: in 	std_logic;
 
@@ -18,7 +19,8 @@ end entity;
 architecture struct of inputbuffer is
 
 	component inputbuffer is
-		port (	sensor_l_in	: in 	std_logic;
+		port (	clk		: in	std_logic;
+			sensor_l_in	: in 	std_logic;
 			sensor_m_in	: in 	std_logic;
 			sensor_r_in	: in 	std_logic;
 
@@ -36,7 +38,6 @@ architecture struct of inputbuffer is
 		);
 	end component;
 
-	signal clk		: std_logic;
 	
 	-- Input signals first 3-bit register
 	signal ia, ib, ic	: std_logic;
@@ -50,9 +51,9 @@ architecture struct of inputbuffer is
 begin
 	f1 : flop 		
 		port map (	clk		=> clk,
-				d(0)		=> ia,
+				d(2)		=> ia,
 				d(1)		=> ib,
-				d(2)		=> ic,
+				d(0)		=> ic,
 				
 				q 		=> f1_out
 		);
@@ -61,13 +62,15 @@ begin
 		port map (	clk		=> clk,
 				d		=> f1_out,
 
-				q(0)		=> oa,
+				q(2)		=> oa,
 				q(1)		=> ob,
-				q(2)		=> oc
+				q(0)		=> oc
 		);
 
-	buf : inputbuffer	-- Input signals of the buffer
-		port map (	sensor_l_in	=> ia,
+	buf : inputbuffer	
+		port map (	clk		=> clk,
+				-- Input signals of the buffer
+				sensor_l_in	=> ia,
 				sensor_m_in	=> ib,
 				sensor_r_in	=> ic,
 
