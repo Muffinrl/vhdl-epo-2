@@ -34,8 +34,15 @@ architecture struct of controller is
 					stop 		);
 
 	signal state, new_state		: controller_state;
+	signal count_in			: std_logic_vector(19 downto 0);
+	signal sensor_input		: std_logic_vector(2 downto 0);
 
 begin
+	
+	sensor_input(0) <= sensor_left;
+	sensor_input(1) <= sensor_middle;
+	sensor_input(2) <= sensor_right;
+
 	process (clk)
 	begin
 		if(rising_edge (clk)) then
@@ -47,8 +54,31 @@ begin
 		end if;
 	end process;
 
-
-	process ( clk, state )
+	process (clk)
+	begin
+		case sensor_input is
+			when "000"	=>
+				new_state <= forward;
+			when "001"	=>
+				new_state <= slight_left;
+			when "010"	=>
+				new_state <= forward;
+			when "011"	=>
+				new_state <= sharp_left;
+			when "100"	=>
+				new_state <= slight_right;
+			when "101"	=>	
+				new_state <= forward;
+			when "110"	=>
+				new_state <= sharp_right;
+			when "111"	=>
+				new_state <= forward;
+			when others	=>
+				new_state <= stop;
+		end case;
+	end process;
+	
+	process (state)
 	begin
 		case state is
 			when forward 	=>
@@ -62,6 +92,25 @@ begin
 				rst_right	<= '0';
 				rst_left	<= '1';
 
+			when sharp_left =>
+				dir_right	<= '0';
+				dir_left	<= '0';
+				rst_right	<= '0';
+				rst_left	<= '0';
+			
+			when slight_right =>
+				dir_left	<= '1';
+				rst_right	<= '1';
+				rst_left	<= '0';
 
-
-					
+			when sharp_right =>	
+				dir_left	<= '1';
+				dir_right	<= '1';
+				rst_right	<= '0';
+				rst_left	<= '0';
+			when stop 	=>
+				rst_right	<= '1';
+				rst_left	<= '1';
+		end case;
+	end process;
+end architecture;
