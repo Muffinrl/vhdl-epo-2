@@ -19,7 +19,8 @@ entity controller is
 		rst_left	: out	std_logic;
 		rst_right	: out 	std_logic;
 
-		-- Reset Timebase
+		-- Timebase
+		count_in	: in	std_logic_vector(19 downto 0);
 		rst_tb		: out	std_logic
 	);
 
@@ -34,9 +35,7 @@ architecture struct of controller is
 					stop 		);
 
 	signal state, new_state		: controller_state;
-	signal count_in			: std_logic_vector(19 downto 0);
 	signal sensor_input		: std_logic_vector(2 downto 0);
-
 begin
 	
 	sensor_input(0) <= sensor_left;
@@ -53,30 +52,6 @@ begin
 			end if;
 		end if;
 	end process;
-
-	process (clk)
-	begin
-		case sensor_input is
-			when "000"	=>
-				new_state <= forward;
-			when "001"	=>
-				new_state <= slight_left;
-			when "010"	=>
-				new_state <= forward;
-			when "011"	=>
-				new_state <= sharp_left;
-			when "100"	=>
-				new_state <= slight_right;
-			when "101"	=>	
-				new_state <= forward;
-			when "110"	=>
-				new_state <= sharp_right;
-			when "111"	=>
-				new_state <= forward;
-			when others	=>
-				new_state <= stop;
-		end case;
-	end process;
 	
 	process (state)
 	begin
@@ -84,33 +59,85 @@ begin
 			when forward 	=>
 				dir_left	<= '1';
 				dir_right	<= '0';
-				rst_left	<= '0';
 				rst_right	<= '0';
+				rst_left	<= '0';
+				rst_tb		<= '0';
+
+				if ( unsigned(count_in) > to_unsigned(1000000, 20)) then
+					new_state <= stop;
+				else
+					new_state <= forward;
+				end if;
 
 			when slight_left =>
+				dir_left	<= '0';
 				dir_right	<= '0';
 				rst_right	<= '0';
 				rst_left	<= '1';
+				rst_tb		<= '0';
+
+				if ( unsigned(count_in) > to_unsigned(1000000, 20)) then
+					new_state <= stop;
+				else
+					new_state <= slight_left;
+				end if;
 
 			when sharp_left =>
-				dir_right	<= '0';
 				dir_left	<= '0';
+				dir_right	<= '0';
 				rst_right	<= '0';
 				rst_left	<= '0';
+				rst_tb		<= '0';
+
+				if ( unsigned(count_in) > to_unsigned(1000000, 20)) then
+					new_state <= stop;
+				else
+					new_state <= sharp_left;
+				end if;
 			
 			when slight_right =>
 				dir_left	<= '1';
+				dir_right	<= '0';
 				rst_right	<= '1';
 				rst_left	<= '0';
+				rst_tb		<= '0';
+
+				if ( unsigned(count_in) > to_unsigned(1000000, 20)) then
+					new_state <= stop;
+				else
+					new_state <= slight_right;
+				end if;
 
 			when sharp_right =>	
 				dir_left	<= '1';
 				dir_right	<= '1';
 				rst_right	<= '0';
 				rst_left	<= '0';
+				rst_tb 		<= '0';
+
+				if ( unsigned(count_in) > to_unsigned(1000000, 20)) then
+					new_state <= stop;
+				else
+					new_state <= sharp_right;
+				end if;
 			when stop 	=>
+				dir_left	<= '0';
+				dir_right	<= '0';
 				rst_right	<= '1';
 				rst_left	<= '1';
+				rst_tb		<= '1';
+	
+				if (sensor_input = "001") then
+					new_state <= slight_left;
+				elsif (sensor_input = "011") then
+					new_state <= sharp_left;
+				elsif (sensor_input = "100") then
+					new_state <= slight_right;
+				elsif (sensor_input = "110") then
+					new_state <= sharp_right;
+				else
+					new_state <= forward;
+				end if;
 		end case;
 	end process;
 end architecture;
