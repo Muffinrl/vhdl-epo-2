@@ -53,7 +53,7 @@ begin
 		end if;
 	end process;
 	
-	process (state)
+	process (state, sensor_left, sensor_middle, sensor_right, count_in, reset)
 	begin
 		case state is
 			when forward 	=>
